@@ -26,7 +26,7 @@ num_new_rows = 1000 #st.sidebar.number_input("Add Rows",1,50)
 #ncol = st.session_state.df.shape[1]  # col count
 #st.title("Network map")
 
-col1, col2, col3 = st.columns([2, 3, 3])
+col1, col2, col3 = st.columns([1.6, 3, 4])
 
 col1.header("Vitreo")
 #col1.subheader("Vitreo")
@@ -34,6 +34,9 @@ from os import listdir
 all_files = listdir("./")   
 csv_files = list(filter(lambda f: f.endswith('.csv'), all_files)) 
 
+
+col2.subheader("Select")
+col3.subheader("Location")
 
 with col1:
     #st.write('You selected:', uploaded_file)
@@ -51,21 +54,20 @@ with col1:
     end_date = st.date_input(
         "End date",
         datetime.date.today())
-    
-    uploaded_file = st.file_uploader("Upload a sensor record file")
-    #Saving upload
-    if uploaded_file is not None:
-        with open(os.path.join("./",uploaded_file.name),"wb") as f:
-            f.write((uploaded_file).getbuffer())
-    
-        st.success("File Saved")
-        st.experimental_rerun()
+with col2:
+    selectiontablecontainer=st.empty()
+    uoloadplace=st.empty()
+    with uoloadplace.container():
+        uploaded_file = st.file_uploader("Upload a sensor record file")
+        #Saving upload
+        if uploaded_file is not None:
+            with open(os.path.join("./",uploaded_file.name),"wb") as f:
+                f.write((uploaded_file).getbuffer())
+        
+            st.success("File Saved")
+            st.experimental_rerun()
 
 
-
-
-col2.subheader("Select")
-col3.subheader("Location")
 
 
 rw =1
@@ -332,7 +334,7 @@ fig1.add_trace(go.Scatter(x=df_unique_cell_with_err['readtime'], y=df_unique_cel
 # Edit the layout
 fig1.update_layout(
                 xaxis_title='Date',
-                yaxis_title='Interval')
+                yaxis_title='Interval / min')
 
 #fig.update_traces(mode="markers+lines", hovertemplate=None)
 #fig.update_layout(hovermode="x unified")
@@ -363,26 +365,27 @@ import plotly.express as px
 from itertools import cycle
 
 with col2:
-    gb = GridOptionsBuilder.from_dataframe(gps_df)
-    gb.configure_pagination(paginationAutoPageSize=True) #Add pagination
-    gb.configure_side_bar() #Add a sidebar
-    gb.configure_selection('multiple', use_checkbox=True, groupSelectsChildren="Group checkbox select children") #Enable multi-row selection
-    gridOptions = gb.build()
+    with selectiontablecontainer.container():
+        gb = GridOptionsBuilder.from_dataframe(gps_df)
+        gb.configure_pagination(paginationAutoPageSize=True) #Add pagination
+        gb.configure_side_bar() #Add a sidebar
+        gb.configure_selection('multiple', use_checkbox=True, groupSelectsChildren="Group checkbox select children") #Enable multi-row selection
+        gridOptions = gb.build()
 
-    grid_response = AgGrid(
-        gps_df,
-        gridOptions=gridOptions,
-        data_return_mode='AS_INPUT', 
-        update_mode='MODEL_CHANGED', 
-        fit_columns_on_grid_load=False,
-        theme='blue', #Add theme color to the table
-        enable_enterprise_modules=True,
-        height=680, 
-        width='100%',
-        reload_data=True
-    )
+        grid_response = AgGrid(
+            gps_df,
+            gridOptions=gridOptions,
+            data_return_mode='AS_INPUT', 
+            update_mode='MODEL_CHANGED', 
+            fit_columns_on_grid_load=False,
+            theme='blue', #Add theme color to the table
+            enable_enterprise_modules=True,
+            height=680, 
+            width='100%',
+            reload_data=True
+        )
 
-    selected = grid_response['selected_rows']
+        selected = grid_response['selected_rows']
 
 #AgGrid(gps_df)
 with col3:
@@ -433,7 +436,7 @@ with col3:
         margin ={'l':5,'t':5,'b':5,'r':5},
         mapbox = {
             'center': {'lon':gps_df['lon'].mean(), 'lat': gps_df['lat'].mean()},
-            'zoom': 7},showlegend = False)
+            'zoom': 6},showlegend = False)
         
     st.plotly_chart(fig, use_container_width=True, config={
             'displayModeBar': False,
@@ -458,7 +461,8 @@ with col1:
         })
 
 csv = convert_df(df_unique_cell)
-st.download_button( 
+with col1:
+    st.download_button( 
 
     label="Download data as CSV",
 
@@ -468,4 +472,12 @@ st.download_button(
 
     mime='text/csv',
 
-)
+    )
+
+with col3:
+    
+    st.write("**Sending intervals**")
+    st.plotly_chart(fig1, use_container_width=True, config={
+        'displayModeBar': False,
+        'editable': False,
+    })
