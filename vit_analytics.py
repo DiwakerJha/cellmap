@@ -59,6 +59,9 @@ with col1:
             f.write((uploaded_file).getbuffer())
     
         st.success("File Saved")
+        st.experimental_rerun()
+
+
 
 
 col2.subheader("Select")
